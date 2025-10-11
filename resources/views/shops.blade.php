@@ -8,7 +8,7 @@
           <h2 class="breadcrumb-title">{{ $titre }}</h2>
           <ul class="breadcrumb-menu">
             <li><a href="/">Accueil</a></li>
-            <li class="active">{{ $currentMenu }}</li>
+            <li class="active">{{ $label }}</li>
           </ul>
         </div>
       </div>

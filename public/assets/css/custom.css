@@ -23,3 +23,13 @@ p {
 .site-breadcrumb .breadcrumb-title {
   text-transform: none;
 }
+.not-active {
+  pointer-events: none;
+  cursor: none !important;
+  color: #FFF !important;
+  border-color: #909090 !important;
+  background: #909090 !important
+}
+.fieldError {
+  border: 1px solid #E35B5A !important;
+}

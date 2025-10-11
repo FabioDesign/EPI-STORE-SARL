@@ -14,14 +14,18 @@ class DatabaseSeeder extends Seeder
     {
         try {
             $this->call([
-                // Slider
-                SliderSeeder::class,
+                // Contact
+                ContactSeeder::class,
                 // Image home
                 ImghomeSeeder::class,
                 // Image shop
                 ImgshopSeeder::class,
+                // Liste email
+                ListemailSeeder::class,
                 // Menu
                 MenuSeeder::class,
+                // Slider
+                SliderSeeder::class,
             ]);
         } catch (QueryException $e) {
             $this->command->info('Erreur d’insertion détectée. Processus de seed ignoré pour cet enregistrement.');

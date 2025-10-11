@@ -72,7 +72,11 @@
                       class="fas fa-solar-panel"></i> EPISTORE SARL</span>
                   <h2 class="site-title">Notre mission</h2>
                   <p>
-                    la prévention des risques dans le cadre du travail. Nous avons choisi une gamme complète de produits d'équipement de protection individuelle EPI et de vêtements de travail pour tous les types de métiers. Notre boutique en ligne s'adresse aux entreprises qui souhaitent équiper leurs employés, aux artisans, aux auto-entrepreneurs ... Les particuliers qui désirent se protéger pour leurs travaux personnels, peuvent également passer commande sur le site. Professionnels, vous êtes en Vendée, en Loire-Atlantique ou dans le Maine-et-Loire ? Demandez l'ouverture de votre compte pro et bénéficiez de remises ainsi que de la livraison* gratuite de vos produits par nos commerciaux (*sous conditions). Professionnels et particuliers, vous pouvez également retirer votre colis dans nos locaux situés à La Bernardière entre Nantes, La Roche Sur Yon et Cholet. EPI-STORE.FR c'est aussi une livraison en France entière avec nos transporteurs partenaires. 
+                    La prévention des risques dans le cadre du travail. Nous avons choisi une gamme complète de produits d'équipement de protection individuelle EPI et de vêtements de travail pour tous les types de métiers.<br>
+                    Notre boutique en ligne s'adresse aux entreprises qui souhaitent équiper leurs employés, aux artisans, aux auto-entrepreneurs ...<br>
+                    Les particuliers qui désirent se protéger pour leurs travaux personnels, peuvent également passer commande sur le site.<br>
+                    Professionnels, nous aidons nos clients dans l'identification  des risques et proposons l'équivalent adapté.<br><br>
+                    Merci de nous faire confiance. 
                   </p>
                 </div>
               </div>

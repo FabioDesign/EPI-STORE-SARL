@@ -1,7 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\{
+    ContactController,
+    HomeController,
+    ShopController
+};
 
 /*
 |--------------------------------------------------------------------------
@@ -21,11 +25,16 @@ Route::fallback(function () {
 
 //FRONTEND
 Route::controller(HomeController::class)->group(function () {
-    Route::get('/', 'home');
-    Route::get('/shops', 'shops');
-    Route::get('/contact', 'contact');
-    Route::get('/login', 'login');
-    Route::get('/forgot-password', 'forgotpassword');
-    Route::get('/register', 'register');
-    Route::get('/shopsingle', 'shopsingle');
+    Route::get('/', 'index');
+    Route::get('login', 'login');
+    Route::get('forgot-password', 'forgotpassword');
+    Route::get('register', 'register');
+    Route::get('shopsingle', 'shopsingle');
+});
+// Route pour les Boutiques
+Route::get('shops', [ShopController::class, 'index']);
+// Route pour les Contacts
+Route::controller(ContactController::class)->group(function () {
+    Route::get('contact', 'index');
+    Route::post('sendmail', 'sendmail');
 });

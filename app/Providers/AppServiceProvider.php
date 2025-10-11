@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\Menu;
+use App\Models\{Contact, Menu};
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -45,5 +45,15 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('menus', $menus);
         });
+        $query = Contact::select('opening', 'phone', 'email', 'address', 'map')->first();
+        config(
+            [
+                'opening' => $query->opening,
+                'phone' => $query->phone,
+                'email' => $query->email,
+                'address' => $query->address,
+                'map' => $query->map,
+            ]
+        );
     }
 }

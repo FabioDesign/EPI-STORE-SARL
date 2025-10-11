@@ -160,6 +160,7 @@ return [
          * Package Service Providers...
          */
         Arcanedev\LogViewer\LogViewerServiceProvider::class,
+        Barryvdh\DomPDF\ServiceProvider::class,
         
         /*
          * Application Service Providers...
@@ -186,6 +187,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         'Myhelper' => App\Helpers\Myhelper::class,
+        'PDF' => Barryvdh\DomPDF\Facade::class,
     ])->toArray(),
 
 ];

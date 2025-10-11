@@ -65,53 +65,48 @@ class Myhelper
     }
   }
 
-  public static function sendEmail($to, $content, $subject, $file_name)
+  public static function sendmail($to, $cc, $usrfrom, $emlfrom, $subject, $content)
   {
     require base_path("vendor/autoload.php");
     $mail = new PHPMailer(true);   // Passing `true` enables exceptions
-
     $mail->CharSet = "UTF-8";
     try {
-
       // Email server settings
       $mail->SMTPDebug = 0;
       $mail->isSMTP();
-      $mail->Host = '173.249.8.9';             //  smtp host
+      $mail->Host = env('MAIL_HOST');           	// smtp host
       $mail->SMTPAuth = true;
-      $mail->Username = 'rhsoft@jacquescyrille.net';   //  sender username
-      $mail->Password = 'SU95Jo+zI+5';       // sender password
-      $mail->SMTPSecure = "";                  // encryption - ssl/tls
-      $mail->Port = 587;                          // port - 587/465
+      $mail->Username = env('MAIL_USERNAME');   		// sender username
+      $mail->Password = env('MAIL_PASSWORD');    // sender password
+      $mail->SMTPSecure = "ssl";              // encryption - ssl/tls
+      $mail->Port = env('MAIL_PORT');            // port - 587/465
       $mail->timeout = null;
       $mail->Encoding = 'base64';
 
-
-      $mail->setFrom('info@afric-a.com', '[SITE WEB] - AFRIC-A');
-      $mail->addAttachment("assets/uploads/".$file_name);
+      $mail->setFrom($emlfrom, $usrfrom); // sender email and name
       $mail->addAddress($to);
-      // $mail->addCC($cc);
-
-      $mail->addReplyTo('info@afric-a.com', '[SITE WEB] - AFRIC-A');
-
-      $mail->SMTPOptions = array(
-        'ssl' => array(
+      if (!empty($cc)) {
+        foreach($cc as $email):
+          $mail->AddCC($email);
+        endforeach;
+      }
+      $mail->addReplyTo($emlfrom, $usrfrom); // sender email and name);
+      $mail->SMTPOptions = [
+        'ssl' => [
           'verify_peer' => false,
           'verify_peer_name' => false,
           'allow_self_signed' => false
-        )
-      );
-      $mail->isHTML(true); // Set email content format to HTML
-
+        ]
+      ];
+      $mail->isHTML(true);                	// Set email comment format to HTML
       $mail->Subject = $subject;
-      $mail->Body    = $content;
-
-      if (!$mail->send()) {
-        return back()->with("failed", "Email not sent.")->withErrors($mail->ErrorInfo);
-      } else {
-        return back()->with("success", "Email has been sent.");
-      }
-    } catch (Exception $e) {
-      return back()->with('error', 'Message could not be sent.');
+      $mail->Body = $content;
+      if ($mail->send())
+        Log::info('SendMail - Success : Email has been sent.');
+      else
+        Log::warning('SendMail - Failed : ' . $mail->ErrorInfo);
+    } catch(Exception $e) {
+      Log::warning('SendMail - Error : ' . $e->getMessage());
     }
   }
 }
