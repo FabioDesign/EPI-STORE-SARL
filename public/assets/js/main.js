@@ -1,7 +1,24 @@
 (function ($) {
     
     "use strict";
-
+    //X-CSRF-TOKEN
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+    // Cart item count
+    function countcart(token) {
+        $.ajax({
+            type: 'POST',
+            data: {token:token},
+            url: '/countcart',
+            success: function(response) {
+                $('#shopcart').html(response);
+            }
+        });
+    }
+    countcart($('meta[name="csrf-token"]').attr('content'));
     // multi level dropdown menu
     $('.dropdown-menu a.dropdown-toggle').on('click', function (e) {
         if (!$(this).next().hasClass('show')) {
@@ -360,12 +377,14 @@
 
 
     //cart quantity
-    $(".plus-btn").on("click", function () {
+    $(".plus-btn").on("click", function (e) {
+        e.preventDefault();
         var i = $(this).closest(".cart-qty").children(".quantity").get(0).value++,
             c = $(this).closest(".cart-qty").children(".minus-btn");
         i > 0 && c.removeAttr("disabled");
     }),
-    $(".minus-btn").on("click", function () {
+    $(".minus-btn").on("click", function (e) {
+        e.preventDefault();
         2 == $(this).closest(".cart-qty").children(".quantity").get(0).value-- && $(this).attr("disabled", "disabled");
     })
 
@@ -404,7 +423,53 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
-
+    
+    //View Password
+    $('.shopcart').on('click', function(e){
+        // Stop the browser from submitting the form.
+        e.preventDefault();
+        let token = $('meta[name="csrf-token"]').attr('content');
+        let datasT = {id:$(this).attr('data-id'), token:token};
+        $.ajax({
+            type: 'POST',
+            data: datasT,
+            url: '/confirmcart',
+            success: function(response) {
+                let splitter = response.split('|');
+                let titre = splitter[0] + " - " + splitter[1];
+                Swal.fire({
+                    title: titre,
+                    text: "Veuillez confirmer l'ajout de cet article au panier !",
+                    imageUrl: splitter[2],
+                    imageHeight: 200,
+                    imageAlt: titre,
+                    confirmButtonColor: "#28A745",
+                    cancelButtonColor: "#D33",
+                    confirmButtonText: "Confirmer",
+                    cancelButtonText: "Annuler",
+                    showCancelButton: true,
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: 'POST',
+                            data: datasT,
+                            url: '/validcart',
+                            success: function(response) {
+                                let splitter = response.split('|');
+                                Swal.fire({
+                                    title: titre,
+                                    text: splitter[1],
+                                    icon: splitter[0]
+                                });
+                            }
+                        });
+                        countcart(token);
+                    }
+                });
+            }
+        });
+    });
 
 })(jQuery);
 

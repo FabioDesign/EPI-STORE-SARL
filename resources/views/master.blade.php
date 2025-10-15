@@ -161,9 +161,9 @@
                     </button>
                   </div>
                   <div class="shop-cart">
-                    <a href="shop-cart.html" class="nav-right-link">
-                      <i class="far fa-shopping-bag"></i>
-                      <span>0</span>
+                    <a href="/shopcart" class="nav-right-link">
+                      <i class="far fa-shopping-cart"></i>
+                      <span id="shopcart">0</span>
                     </a>
                   </div>
                   <div class="nav-btn">

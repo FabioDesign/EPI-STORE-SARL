@@ -65,7 +65,7 @@ class Myhelper
     }
   }
 
-  public static function sendmail($to, $cc, $usrfrom, $emlfrom, $subject, $content)
+  public static function sendmail($to, $cc, $usrfrom, $emlfrom, $subject, $content, $path, $filename)
   {
     require base_path("vendor/autoload.php");
     $mail = new PHPMailer(true);   // Passing `true` enables exceptions
@@ -89,6 +89,9 @@ class Myhelper
         foreach($cc as $email):
           $mail->AddCC($email);
         endforeach;
+      }
+      if ($path != '') {
+        $mail->addAttachment(public_path($path), $filename);
       }
       $mail->addReplyTo($emlfrom, $usrfrom); // sender email and name);
       $mail->SMTPOptions = [

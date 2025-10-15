@@ -29,10 +29,16 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('login', 'login');
     Route::get('forgot-password', 'forgotpassword');
     Route::get('register', 'register');
-    Route::get('shopsingle', 'shopsingle');
 });
 // Route pour les Boutiques
-Route::get('shops', [ShopController::class, 'index']);
+Route::controller(ShopController::class)->group(function () {
+    Route::get('shops', 'index');
+    Route::get('shopcart', 'shopcart');
+    Route::post('countcart', 'countcart');
+    Route::post('validcart', 'validcart');
+    Route::post('shopcart', 'shopcartform');
+    Route::post('confirmcart', 'confirmcart');
+});
 // Route pour les Contacts
 Route::controller(ContactController::class)->group(function () {
     Route::get('contact', 'index');

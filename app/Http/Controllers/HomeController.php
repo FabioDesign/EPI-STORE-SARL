@@ -21,15 +21,6 @@ class HomeController extends Controller
         return view('home', compact('titre', 'currentMenu', 'sliders', 'imghomes'));
     }
 
-    public function contact()
-    {
-        // Titre
-        $titre = "Nous Contacter";
-        $currentMenu = 'Contacts';
-
-        return view('contacts', compact('titre', 'currentMenu'));
-    }
-
     public function login()
     {
         // Titre
@@ -63,6 +54,6 @@ class HomeController extends Controller
         $titre = "register";
         $currentMenu = 'shop';
 
-        return view('shopsingle', compact('titre', 'currentMenu'));
+        return view('shop-cart', compact('titre', 'currentMenu'));
     }
 }

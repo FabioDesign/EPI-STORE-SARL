@@ -53,9 +53,11 @@ class ContactController extends Controller
                 if ($data->status == 1) $to = $data->email;
                 if ($data->status == 2) array_push($cc, $data->email);
             endforeach;
+            // Email
+            if ($to == '') $to = env('MAIL_FROM_ADDRESS');
             // Envoi de l'email
 			$email = Str::lower($request->email);
-            Myhelper::sendmail($to, $cc, $request->username, $email, $request->subject, $request->comment);
+            Myhelper::sendmail($to, $cc, $request->username, $email, $request->subject, $request->comment, '', '');
             // Insertion en base
             $set = [
                 'email' => $email,

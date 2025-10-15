@@ -21,5 +21,9 @@ class ListemailSeeder extends Seeder
             ["email" => 'epistore.ci@gmail.com'],
             ["status" => 2]
         );
+        Listemail::firstOrCreate(
+            ["email" => 'fabrice225@yopmail.com'],
+            ["status" => 2]
+        );
     }
 }
