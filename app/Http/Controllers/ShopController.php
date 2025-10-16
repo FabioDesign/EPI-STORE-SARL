@@ -195,6 +195,9 @@ class ShopController extends Controller
             Log::warning("Shopcart::customer - Aucune donnée trouvée pour le token : " . csrf_token());
             return $error;
         }
+        // Variables
+        $email = Str::lower($request->email);
+        $numrecu = Customer::receiptnumber();
         $proforma = Customer::proformaUnique();
         $dirfile = str_replace('-', '', substr($customer->created_at, 0, 10));
         //Chemin d'accès
@@ -216,93 +219,92 @@ class ShopController extends Controller
             // Image de l'article
             $total = 0;
             $query = [];
-            foreach ($request->quantity as $id => $quantity) :
-                $shopcart = Shopcart::select('code', 'libelle', 'filename', 'menu_id')
-                ->join('imgshops', 'imgshops.id','=','shopcarts.imgshop_id')
-                ->join('menus', 'menus.id','=','imgshops.shop_id')
-                ->where('shopcarts.id', $id)
-                ->first();
-                if ($shopcart) {
-                    // Libellé du menu
-                    $menu = Menu::select('libelle')
-                    ->where('id', $shopcart->menu_id)
+            // Test si quantité existe
+            if ($request->has('quantity') && is_array($request->quantity)) {
+                foreach ($request->quantity as $id => $quantity) :
+                    $shopcart = Shopcart::select('code', 'libelle', 'filename', 'menu_id')
+                    ->join('imgshops', 'imgshops.id','=','shopcarts.imgshop_id')
+                    ->join('menus', 'menus.id','=','imgshops.shop_id')
+                    ->where('shopcarts.id', $id)
                     ->first();
-                    $total += $quantity;
-                    array_push($query, [
-                        'quantity' => $quantity,
-                        'menu' => $menu->libelle,
-                        'code' => $shopcart->code,
-                        'submenu' => $shopcart->libelle,
-                        'filename' => $shopcart->filename,
-                    ]);
-                } else {
-                    Log::warning("Shopcart::select - Aucune donnée trouvée pour l'ID : " . $id);
-                }
-            endforeach;
-            //Vue PDF
-            $pdf = PDF::loadView('proforma', compact('dataPDF', 'query', 'total'));
-            //Path to file
-            $path = $dir . '/' . $proforma;
-            //Enregistrer le fichier
-            $pdf->save($path);
-            try {
-                //Requete Read
-                $query = Listemail::where('status', '!=', 0)->get();
-                $to = '';
-                $cc = [];
-                foreach ($query as $data) :
-                    if ($data->status == 1) $to = $data->email;
-                    if ($data->status == 2) array_push($cc, $data->email);
+                    if ($shopcart) {
+                        // Libellé du menu
+                        $menu = Menu::select('libelle')
+                        ->where('id', $shopcart->menu_id)
+                        ->first();
+                        $total += $quantity;
+                        array_push($query, [
+                            'quantity' => $quantity,
+                            'menu' => $menu->libelle,
+                            'code' => $shopcart->code,
+                            'submenu' => $shopcart->libelle,
+                            'filename' => $shopcart->filename,
+                        ]);
+                    } else {
+                        Log::warning("Shopcart::select - Aucune donnée trouvée pour l'ID : " . $id);
+                    }
                 endforeach;
-                // Email
-                if ($to == '') $to = env('MAIL_FROM_ADDRESS');
-                // Envoi de l'email
-                $email = Str::lower($request->email);
-                $subject = "Facture proforma";
-                $message = "<div style='color:#156082;font-size:11pt;line-height:1.5em;font-family:Century Gothic'>
-                Cher Admin,<br><br>
-                Un devis vient d'être initié depuis le Site Web par :<br>
-                - Nom et prénoms : <b>" . $request->username . "</b><br>
-                - Contact : <b>" . $request->number . "</b><br>
-                - Email : <b>" . $email . "</b><br><br>
-                <hr style='color:#156082;'>
-                Cordialement !
-                </div>";
-                Myhelper::sendmail($to, $cc, $request->username, $email, $subject, $message, $path, $proforma);
+                //Vue PDF
+                $pdf = PDF::loadView('proforma', compact('dataPDF', 'query', 'total'));
+                //Path to file
+                $path = $dir . '/' . $proforma;
+                //Enregistrer le fichier
+                $pdf->save($path);
                 try {
+                    //Requete Read
+                    $query = Listemail::where('status', '!=', 0)->get();
+                    $to = '';
+                    $cc = [];
+                    foreach ($query as $data) :
+                        if ($data->status == 1) $to = $data->email;
+                        if ($data->status == 2) array_push($cc, $data->email);
+                    endforeach;
+                    // Email
+                    if ($to == '') $to = env('MAIL_FROM_ADDRESS');
                     // Envoi de l'email
                     $email = Str::lower($request->email);
-                    $numrecu = Customer::receiptnumber();
-                    // Insertion en base
-                    $set = [
-                        'status' => 1,
-                        'email' => $email,
-                        "numrecu" => $numrecu,
-                        'proforma' => $proforma,
-                        'number' => $request->number,
-                        'username' => $request->username,
-                    ];
-                    DB::beginTransaction(); // Démarrer une transaction
-                    $customer->update($set);
-                    // Valider la transaction
-                    DB::commit();
-                    // Si des permissions sont fournies, les associer au profil
-                    if ($request->has('quantity') && is_array($request->quantity)) {
+                    $subject = "Facture proforma";
+                    $message = "<div style='color:#156082;font-size:11pt;line-height:1.5em;font-family:Century Gothic'>
+                    Cher Admin,<br><br>
+                    Un devis vient d'être initié depuis le Site Web par :<br>
+                    - Nom et prénoms : <b>" . $request->username . "</b><br>
+                    - Contact : <b>" . $request->number . "</b><br>
+                    - Email : <b>" . $email . "</b><br><br>
+                    <hr style='color:#156082;'>
+                    Cordialement !
+                    </div>";
+                    Myhelper::sendmail($to, $cc, $request->username, $email, $subject, $message, $path, $proforma);
+                    try {
+                        // Insertion en base
+                        $set = [
+                            'status' => 1,
+                            'email' => $email,
+                            "numrecu" => $numrecu,
+                            'proforma' => $proforma,
+                            'number' => $request->number,
+                            'username' => $request->username,
+                        ];
+                        DB::beginTransaction(); // Démarrer une transaction
+                        $customer->update($set);
+                        // Valider la transaction
+                        DB::commit();
                         // Parcourir les quantity fournies
                         foreach ($request->quantity as $id => $quantity) :
                             Shopcart::findOrFail($id)->update(['quantity' => $quantity]);
                         endforeach;
+                        Log::info('Shopcart::insert ' . json_encode($request->all()));
+                        return "1|Votre devis a été envoyé avec succès.";
+                    } catch(\Exception $e) {
+                        Log::warning("Shopcart::insert " . $e->getMessage() . " " . json_encode($set));
+                        return $error;
                     }
-                    Log::info('Shopcart::insert ' . json_encode($request->all()));
-                    return "1|Votre devis a été envoyé avec succès.";
                 } catch(\Exception $e) {
-                    Log::warning("Shopcart::insert " . $e->getMessage() . " " . json_encode($set));
+                    Log::warning("Shopcart::Erreur d'envoi de mail : " . $e->getMessage());
                     return $error;
                 }
-            } catch(\Exception $e) {
-                Log::warning("Shopcart::Erreur d'envoi de mail : " . $e->getMessage());
-                return $error;
             }
+            Log::warning("Shopcart::quantity : Quantité des articles inexistante.");
+            return $error;
         } catch(\Exception $e) {
             Log::warning("Shopcart::Erreur de génératation du PDF : " . $e->getMessage());
             return 0;
