@@ -141,20 +141,21 @@ class ShopController extends Controller
         $email = $customer->email ?? '';
         // Image de l'article
         $query = [];
-        $shopcarts = Shopcart::select('shopcarts.id', 'code', 'libelle', 'filename', 'menu_id')
+        $shopcarts = Shopcart::select('shopcarts.id', 'imgshops.id AS img', 'code', 'libelle', 'filename', 'menu_id')
         ->join('imgshops', 'imgshops.id','=','shopcarts.imgshop_id')
         ->join('customers', 'customers.id','=','shopcarts.customer_id')
         ->join('menus', 'menus.id','=','imgshops.shop_id')
         ->where($where)
         ->orderBy('shopcarts.id')
         ->get();
-        foreach($shopcarts as $shopcart):
+        foreach ($shopcarts as $shopcart) :
             // Libellé du menu
             $menu = Menu::select('libelle')
             ->where('id', $shopcart->menu_id)
             ->first();
             array_push($query, [
                 'id' => $shopcart->id,
+                'img' => $shopcart->img,
                 'menu' => $menu->libelle,
                 'code' => $shopcart->code,
                 'submenu' => $shopcart->libelle,
@@ -163,9 +164,8 @@ class ShopController extends Controller
         endforeach;
         return view('shopcart', compact('titre', 'currentMenu', 'username', 'number', 'email', 'query'));
     }
-    public function shopcartform(Request $request)
+    public function store(Request $request)
     {
-        // dd($request->all());
         $error = "2|Service indisponible, veuillez réessayer plus tard !";
         //Validator
         $validator = Validator::make($request->all(), [
@@ -181,7 +181,7 @@ class ShopController extends Controller
             'quantity.*' => "Quantité obligatoire.",
         ]);
         //Error field
-        if($validator->fails()){
+        if ($validator->fails()) {
             $errors = $validator->errors();
             Log::warning("Shopcart::validator " . json_encode($request->all()));
             if($errors->has('username')) return "0|" . $errors->first('username') . "|.username";
@@ -193,33 +193,6 @@ class ShopController extends Controller
         $customer = Customer::where('token', csrf_token())->first();
         if (!$customer) {
             Log::warning("Shopcart::customer - Aucune donnée trouvée pour le token : " . csrf_token());
-            return $error;
-        }
-        try {
-            // Envoi de l'email
-            $email = Str::lower($request->email);
-            $numrecu = Customer::receiptnumber();
-            // Insertion en base
-            $set = [
-                'status' => 1,
-                'email' => $email,
-                "numrecu" => $numrecu,
-                'number' => $request->number,
-                'username' => $request->username,
-            ];
-            DB::beginTransaction(); // Démarrer une transaction
-            $customer->update($set);
-            // Valider la transaction
-            DB::commit();
-            // Si des permissions sont fournies, les associer au profil
-            if ($request->has('quantity') && is_array($request->quantity)) {
-                // Parcourir les quantity fournies
-                foreach ($request->quantity as $id => $quantity) :
-                    Shopcart::findOrFail($id)->update(['quantity' => $quantity]);
-                endforeach;
-            }
-        } catch(\Exception $e) {
-          Log::warning("Shopcart::update - Costumer " . $e->getMessage() . " " . json_encode($set));
             return $error;
         }
         $proforma = Customer::proformaUnique();
@@ -263,7 +236,7 @@ class ShopController extends Controller
                         'filename' => $shopcart->filename,
                     ]);
                 } else {
-                    Log::warning("Shopcart::shopcarts - Aucune donnée trouvée pour l'ID : " . $id);
+                    Log::warning("Shopcart::select - Aucune donnée trouvée pour l'ID : " . $id);
                 }
             endforeach;
             //Vue PDF
@@ -272,14 +245,6 @@ class ShopController extends Controller
             $path = $dir . '/' . $proforma;
             //Enregistrer le fichier
             $pdf->save($path);
-            try {
-                $set = [
-                    'proforma' => $proforma,
-                ];
-                $customer->update($set);
-            } catch(\Exception $e) {
-                Log::warning("Shopcart::update - Proforma " . $e->getMessage());
-            }
             try {
                 //Requete Read
                 $query = Listemail::where('status', '!=', 0)->get();
@@ -304,15 +269,59 @@ class ShopController extends Controller
                 Cordialement !
                 </div>";
                 Myhelper::sendmail($to, $cc, $request->username, $email, $subject, $message, $path, $proforma);
-                Log::info('Sendmail::insert ' . json_encode($request->all()));
-                return "1|Votre devis a été envoyé avec succès.";
+                try {
+                    // Envoi de l'email
+                    $email = Str::lower($request->email);
+                    $numrecu = Customer::receiptnumber();
+                    // Insertion en base
+                    $set = [
+                        'status' => 1,
+                        'email' => $email,
+                        "numrecu" => $numrecu,
+                        'proforma' => $proforma,
+                        'number' => $request->number,
+                        'username' => $request->username,
+                    ];
+                    DB::beginTransaction(); // Démarrer une transaction
+                    $customer->update($set);
+                    // Valider la transaction
+                    DB::commit();
+                    // Si des permissions sont fournies, les associer au profil
+                    if ($request->has('quantity') && is_array($request->quantity)) {
+                        // Parcourir les quantity fournies
+                        foreach ($request->quantity as $id => $quantity) :
+                            Shopcart::findOrFail($id)->update(['quantity' => $quantity]);
+                        endforeach;
+                    }
+                    Log::info('Shopcart::insert ' . json_encode($request->all()));
+                    return "1|Votre devis a été envoyé avec succès.";
+                } catch(\Exception $e) {
+                    Log::warning("Shopcart::insert " . $e->getMessage() . " " . json_encode($set));
+                    return $error;
+                }
             } catch(\Exception $e) {
-                Log::warning("Erreur d'envoi de mail : " . $e->getMessage());
+                Log::warning("Shopcart::Erreur d'envoi de mail : " . $e->getMessage());
                 return $error;
             }
         } catch(\Exception $e) {
-            Log::warning("Erreur de génératation du PDF : " . $e->getMessage());
+            Log::warning("Shopcart::Erreur de génératation du PDF : " . $e->getMessage());
             return 0;
+        }
+    }
+    public function destroy($id)
+    {
+        $error = "2|Service indisponible, veuillez réessayer plus tard !";
+        try {
+            // Suppression
+            $deleted = Shopcart::destroy($id);
+            if (!$deleted) {
+                Log::warning("Shopcart::destroy - Tentative de suppression d'un article : " . $id);
+                return $error;
+            }
+            return "1|Votre article a été supprimé avec succès.";
+        } catch(\Exception $e) {
+            Log::warning("Shopcart::destroy - Erreur lors de la suppression d'un article : " . $e->getMessage());
+            return $error;
         }
     }
 }

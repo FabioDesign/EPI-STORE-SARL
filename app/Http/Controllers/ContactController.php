@@ -20,8 +20,9 @@ class ContactController extends Controller
 
         return view('contacts', compact('titre', 'currentMenu'));
     }
-    public function sendmail(Request $request)
+    public function store(Request $request)
     {
+        $error = "2|Service indisponible, veuillez réessayer plus tard !";
         //Validator
         $validator = Validator::make($request->all(), [
             'username' => 'required',
@@ -58,19 +59,24 @@ class ContactController extends Controller
             // Envoi de l'email
 			$email = Str::lower($request->email);
             Myhelper::sendmail($to, $cc, $request->username, $email, $request->subject, $request->comment, '', '');
-            // Insertion en base
-            $set = [
-                'email' => $email,
-                'subject' => $request->subject,
-                'comment' => $request->comment,
-                'username' => $request->username,
-            ];
-            Sendmail::create($set);
-            Log::info('Sendmail::insert ' . json_encode($request->all()));
-            return "1|Votre message a été envoyé avec succès.";
+            try {
+                // Insertion en base
+                $set = [
+                    'email' => $email,
+                    'subject' => $request->subject,
+                    'comment' => $request->comment,
+                    'username' => $request->username,
+                ];
+                Sendmail::create($set);
+                Log::info('Sendmail::insert ' . json_encode($request->all()));
+                return "1|Votre message a été envoyé avec succès.";
+            } catch(\Exception $e) {
+                Log::warning("Sendmail::insert " . $e->getMessage() . " " . json_encode($set));
+                return $error;
+            }
         } catch(\Exception $e) {
-            Log::warning("Erreur d'envoi de mail : " . $e->getMessage());
-            return "2|Une erreur est survenue lors de l'envoi du message. Veuillez réessayer plus tard.";
+            Log::warning("Sendmail::Erreur d'envoi de mail : " . $e->getMessage());
+            return $error;
         }
     }
 }

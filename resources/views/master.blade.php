@@ -374,6 +374,6 @@
     <script src="assets/js/wow.min.js"></script>
     <script src="assets/js/sweetalert2.all.min.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/contact-form.js?v=2.0.1"></script>
+    <script src="assets/js/custom.js?v=2.0.1"></script>
   </body>
 </html>    

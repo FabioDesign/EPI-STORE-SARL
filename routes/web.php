@@ -33,14 +33,15 @@ Route::controller(HomeController::class)->group(function () {
 // Route pour les Boutiques
 Route::controller(ShopController::class)->group(function () {
     Route::get('shops', 'index');
+    Route::post('shopcart', 'store');
     Route::get('shopcart', 'shopcart');
     Route::post('countcart', 'countcart');
     Route::post('validcart', 'validcart');
-    Route::post('shopcart', 'shopcartform');
     Route::post('confirmcart', 'confirmcart');
+    Route::delete('delshopcart/{id}', 'destroy');
 });
 // Route pour les Contacts
 Route::controller(ContactController::class)->group(function () {
     Route::get('contact', 'index');
-    Route::post('sendmail', 'sendmail');
+    Route::post('sendmail', 'store');
 });

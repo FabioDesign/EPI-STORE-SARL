@@ -18,6 +18,64 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
+        // Cart item count
+        function countcart(token) {
+            $.ajax({
+                type: 'POST',
+                data: {token:token},
+                url: '/countcart',
+                success: function(response) {
+                    $('#shopcart').html(response);
+                }
+            });
+        }
+        countcart($('meta[name="csrf-token"]').attr('content'));
+        //View Password
+        $('.shopcart').on('click', function(e){
+            // Stop the browser from submitting the form.
+            e.preventDefault();
+            let token = $('meta[name="csrf-token"]').attr('content');
+            let datasT = {id:$(this).attr('data-id'), token:token};
+            $.ajax({
+                type: 'POST',
+                data: datasT,
+                url: '/confirmcart',
+                success: function(response) {
+                    let splitter = response.split('|');
+                    let titre = splitter[0] + " - " + splitter[1];
+                    Swal.fire({
+                        title: titre,
+                        text: "Veuillez confirmer l'ajout de cet article au panier !",
+                        imageUrl: splitter[2],
+                        imageHeight: 200,
+                        imageAlt: titre,
+                        confirmButtonColor: "#28A745",
+                        cancelButtonColor: "#D33",
+                        confirmButtonText: "Confirmer",
+                        cancelButtonText: "Annuler",
+                        showCancelButton: true,
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: 'POST',
+                                data: datasT,
+                                url: '/validcart',
+                                success: function(response) {
+                                    let splitter = response.split('|');
+                                    Swal.fire({
+                                        title: titre,
+                                        text: splitter[1],
+                                        icon: splitter[0]
+                                    });
+                                }
+                            });
+                            countcart(token);
+                        }
+                    });
+                }
+            });
+        });
         // Set up an event listener for the contact form.
         $(".submit-btn").on("click", function (e) {
             // Stop the browser from submitting the form.
@@ -168,5 +226,67 @@
                     }
                 });
             }
+        });
+        // Set up an event listener for the contact form.
+        $(".cart-remove").on("click", function (e) {
+            // Stop the browser from submitting the form.
+            e.preventDefault();
+            let id = $(this).attr('data-id');
+            let datasT = {id:$(this).attr('data-img')};
+            $.ajax({
+                type: 'POST',
+                data: datasT,
+                url: '/confirmcart',
+                success: function(response) {
+                    let splitter = response.split('|');
+                    let titre = splitter[0] + " - " + splitter[1];
+                    Swal.fire({
+                        title: titre,
+                        text: "Veuillez confirmer la suppression de cet article !",
+                        imageUrl: splitter[2],
+                        imageHeight: 200,
+                        imageAlt: titre,
+                        confirmButtonColor: "#28A745",
+                        cancelButtonColor: "#D33",
+                        confirmButtonText: "Confirmer",
+                        cancelButtonText: "Annuler",
+                        showCancelButton: true,
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Submit the form using AJAX.
+                            $.ajax({
+                                type: 'DELETE',
+                                url: '/delshopcart/' + id,
+                                beforeSend: function() {
+                                    $('.submit-cmd').addClass('not-active').html('<i class="fa fa-spinner fa-pulse"></i> Patienter...');
+                                },
+                                success:function(response) {
+                                    var splitter = response.split('|');
+                                    if (splitter[0] == 1) {
+                                        var hasError = 'success';
+                                        var hasTitle = 'Félicitation !';
+                                    } else {
+                                        var hasError = 'error';
+                                        var hasTitle = 'Echec !';
+                                    }
+                                    swal.fire({
+                                        title: hasTitle,
+                                        text: splitter[1],
+                                        icon: hasError,
+                                        buttonsStyling: false,
+                                        confirmButtonText: 'Fermer',
+                                        customClass: {
+                                            confirmButton: "theme-btn btn-sm"
+                                        }
+                                    }).then(function() {
+                                        location.reload();
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
         });
     });

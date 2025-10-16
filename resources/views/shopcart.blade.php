@@ -85,7 +85,7 @@
                         </td>
                         <td class="text-center">
                           <div class="cart-qty">
-                            <button class="cart-remove"><i class="fal fa-times text-danger"></i></button>
+                            <button class="cart-remove" data-id="{{ $data['id'] }}" data-img="{{ $data['img'] }}"><i class="fal fa-times text-danger"></i></button>
                           </div>
                         </td>
                       </tr>
