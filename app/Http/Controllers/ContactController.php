@@ -45,6 +45,11 @@ class ContactController extends Controller
             if($errors->has('comment')) return "0|" . $errors->first('comment') . "|.comment";
             if($errors->has('email')) return "0|" . $errors->first('email') . "|.email";
         }
+        // Nombre d'espace dans le commentaire        
+        if (Str::substrCount($request->comment, ' ') == 0) {
+            Log::warning("Sendmail::validator comment empty " . json_encode($request->all()));
+            return "1|Votre message a été envoyé avec succès.";
+        }
         try {
 			//Requete Read
 			$query = Listemail::where('status', '!=', 0)->get();
